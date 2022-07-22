@@ -3,6 +3,8 @@ package main // 入口包
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 /**
@@ -48,15 +50,19 @@ if r.URL.Path == "/" {
 // 			"<a href=\"mailto:summer@example.com\">summer@example.com</a>")
 // }
 
-func defaultHandler(w http.ResponseWriter, r *http.Request) {
+// func defaultHandler(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+// 	if r.URL.Path == "/" {
+// 		fmt.Fprint(w, "<h1>Hello, 欢迎来到 goblog</h1>")
+// 	} else {
+// 		w.WriteHeader(http.StatusNotFound)
+// 		fmt.Fprint(w, "<h1>请求页面未找到 :(</h1>"+
+// 			"<p>如有疑惑，请联系我们。</p>")
+// 	}
+// }
+func homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if r.URL.Path == "/" {
-		fmt.Fprint(w, "<h1>Hello, 欢迎来到 goblog</h1>")
-	} else {
-		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprint(w, "<h1>请求页面未找到 :(</h1>"+
-			"<p>如有疑惑，请联系我们。</p>")
-	}
+	fmt.Fprint(w, "<h1>Hello, 欢迎来到 goblog！</h1>")
 }
 
 func aboutHandler(w http.ResponseWriter, r *http.Request) {
@@ -65,12 +71,46 @@ func aboutHandler(w http.ResponseWriter, r *http.Request) {
 		"<a href=\"mailto:summer@example.com\">summer@example.com</a>")
 }
 
+func notFoundHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusNotFound)
+	fmt.Fprint(w, "<h1>请求页面未找到 :(</h1><p>如有疑惑，请联系我们。</p>")
+}
+
+func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	fmt.Fprint(w, "文章 ID："+id)
+}
+
+func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "访问文章列表")
+}
+
+func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "创建新的文章")
+}
+
 // 入口函数
 func main() {
-	// 自定义路由
-	router := http.NewServeMux()
-	router.HandleFunc("/", defaultHandler)
-	router.HandleFunc("/about", aboutHandler)
+	// 自定义路由  官方
+	// router := http.NewServeMux()
+	// 自定义路由 gorilla/mux
+	router := mux.NewRouter()
+	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
+	router.HandleFunc("/about", aboutHandler).Methods("GET").Name("about")
+
+	router.HandleFunc("/articles/{id:[0-9]+}", articlesShowHandler).Methods("GET").Name("articles.show")
+	router.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
+	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store")
+
+	// 自定义 404 页面
+	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
+
+	homeURL, _ := router.Get("home").URL() // 获取指定命名的url
+	fmt.Println("homeURL: ", homeURL)      // 命令行输出
+	articleURL, _ := router.Get("articles.show").URL("id", "23")
+	fmt.Println("articleURL: ", articleURL) // 命令行输出
 
 	http.ListenAndServe(":3000", router)
 }
