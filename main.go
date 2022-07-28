@@ -8,6 +8,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// 自定义路由 gorilla/mux
+var router = mux.NewRouter()
+
 /**
 if r.URL.Path == "/" {
 	fmt.Fprint(w, "<h1>Hello, 这里是 goblog</h1>")
@@ -114,12 +117,31 @@ func removeTrailingSlash(next http.Handler) http.Handler {
 	})
 }
 
+func aritclesCreateHandler(w http.ResponseWriter, r *http.Request) {
+	html := `
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+			<title>创建文章 —— 我的技术博客</title>
+	</head>
+	<body>
+			<form action="%s" method="post">
+					<p><input type="text" name="title"></p>
+					<p><textarea name="body" cols="30" rows="10"></textarea></p>
+					<p><button type="submit">提交</button></p>
+			</form>
+	</body>
+	</html>
+	`
+	storeURL, _ := router.Get("articles.store").URL()
+	fmt.Fprintf(w, html, storeURL)
+}
+
 // 入口函数
 func main() {
 	// 自定义路由  官方
 	// router := http.NewServeMux()
-	// 自定义路由 gorilla/mux
-	router := mux.NewRouter()
+
 	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
 	router.HandleFunc("/about", aboutHandler).Methods("GET").Name("about")
 
@@ -127,6 +149,7 @@ func main() {
 	router.HandleFunc("/articles", articlesIndexHandler).Methods("GET").Name("articles.index")
 	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store")
 
+	router.HandleFunc("/articles/create", aritclesCreateHandler).Methods("GET").Name("articles.create")
 	// 自定义 404 页面
 	router.NotFoundHandler = http.HandlerFunc(notFoundHandler)
 
