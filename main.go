@@ -1,19 +1,69 @@
 package main // 入口包
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"text/template"
+	"time"
 	"unicode/utf8"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 )
 
 // 自定义路由 gorilla/mux
 var router = mux.NewRouter()
+
+// 定义数据库连接
+var db *sql.DB
+
+func initDB() {
+
+	var err error
+	config := mysql.Config{
+		User:                 "root",
+		Passwd:               "root",
+		Addr:                 "172.17.0.3:3306",
+		Net:                  "tcp",
+		DBName:               "goblog",
+		AllowNativePasswords: true,
+	}
+
+	// 准备数据库连接池
+	db, err = sql.Open("mysql", config.FormatDSN())
+	checkError(err)
+
+	// 设置最大连接数
+	db.SetMaxOpenConns(25)
+	// 设置最大空闲连接数
+	db.SetMaxIdleConns(25)
+	// 设置每个链接的过期时间
+	db.SetConnMaxLifetime(5 * time.Minute)
+
+	// 尝试连接，失败会报错
+	err = db.Ping()
+	checkError(err)
+}
+
+func checkError(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func createTables() {
+	createAirticlesSQL := `CREATE TABLE IF NOT EXISTS articles(
+    id bigint(20) PRIMARY KEY AUTO_INCREMENT NOT NULL,
+    title varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+    body longtext COLLATE utf8mb4_unicode_ci
+); `
+	_, err := db.Exec(createAirticlesSQL)
+	checkError(err)
+}
 
 /**
 if r.URL.Path == "/" {
@@ -198,6 +248,8 @@ func articlesCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 // 入口函数
 func main() {
+	initDB()
+	createTables()
 	// 自定义路由  官方
 	// router := http.NewServeMux()
 
