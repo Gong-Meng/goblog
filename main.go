@@ -3,6 +3,7 @@ package main // 入口包
 import (
 	"database/sql"
 	"fmt"
+	"goblog/pkg/route"
 	"log"
 	"net/http"
 	"net/url"
@@ -17,7 +18,8 @@ import (
 )
 
 // 自定义路由 gorilla/mux
-var router = mux.NewRouter()
+// var router = mux.NewRouter()
+var router *mux.Router
 
 // 定义数据库连接
 var db *sql.DB
@@ -249,7 +251,7 @@ func articlesShowHandler(w http.ResponseWriter, r *http.Request) {
 
 		tmpl, err := template.New("show.gohtml").
 			Funcs(template.FuncMap{
-				"RouteName2URL": RouteName2URL,
+				"RouteName2URL": route.Name2URL,
 				"Int64ToString": Int64ToString,
 			}).ParseFiles("resources/views/articles/show.gohtml")
 		checkError(err)
@@ -569,6 +571,8 @@ func main() {
 	createTables()
 	// 自定义路由  官方
 	// router := http.NewServeMux()
+	route.Initialize()
+	router = route.Router
 
 	router.HandleFunc("/", homeHandler).Methods("GET").Name("home")
 	router.HandleFunc("/about", aboutHandler).Methods("GET").Name("about")
