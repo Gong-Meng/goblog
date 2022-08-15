@@ -57,76 +57,6 @@ func saveArticleToDB(title string, body string) (int64, error) {
 	return 0, err
 }
 
-/**
-if r.URL.Path == "/" {
-	fmt.Fprint(w, "<h1>Hello, 这里是 goblog</h1>")
-} else if r.URL.Path == "/about" {
-	fmt.Fprint(w, "此博客是用以记录编程笔记，如您有反馈或建议，请联系 "+
-		"<a href=\"mailto:summer@example.com\">summer@example.com</a>")
-} else {
-	fmt.Fprint(w, "<h1>请求页面未找到 :(</h1>"+
-		"<p>如有疑惑，请联系我们。</p>")
-}
-*/
-
-// func handlerFunc(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-// 	if r.URL.Path == "/" {
-// 		fmt.Fprint(w, "<h1>Hello, 这里是 goblog! </h1>")
-// 	} else if r.URL.Path == "/about" {
-// 		fmt.Fprint(w, "此博客是用以记录编程笔记，如您有反馈或建议，请联系 "+
-// 			"<a href=\"mailto:summer@example.com\">summer@example.com</a>")
-// 	} else {
-// 		w.WriteHeader(http.StatusNot)
-// 		fmt.Fprint(w, "<h1>请求页面未找到 :(</h1>"+
-// 			"<p>如有疑惑，请联系我们。</p>")
-// 	}
-// }
-
-// func defaultHandler(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-// 	if r.URL.Path == "/" {
-// 			fmt.Fprint(w, "<h1>Hello, 欢迎来到 goblog！</h1>")
-// 	} else {
-// 			w.WriteHeader(http.StatusNotFound)
-// 			fmt.Fprint(w, "<h1>请求页面未找到 :(</h1>"+
-// 					"<p>如有疑惑，请联系我们。</p>")
-// 	}
-// }
-
-// func aboutHandler(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-// 	fmt.Fprint(w, "此博客是用以记录编程笔记，如您有反馈或建议，请联系 "+
-// 			"<a href=\"mailto:summer@example.com\">summer@example.com</a>")
-// }
-
-// func defaultHandler(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-// 	if r.URL.Path == "/" {
-// 		fmt.Fprint(w, "<h1>Hello, 欢迎来到 goblog</h1>")
-// 	} else {
-// 		w.WriteHeader(http.StatusNotFound)
-// 		fmt.Fprint(w, "<h1>请求页面未找到 :(</h1>"+
-// 			"<p>如有疑惑，请联系我们。</p>")
-// 	}
-// }
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	// w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, "<h1>Hello, 欢迎来到 goblog！</h1>")
-}
-
-func aboutHandler(w http.ResponseWriter, r *http.Request) {
-	// w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	fmt.Fprint(w, "此博客是用以记录编程笔记，如您有反馈或建议，请联系 "+
-		"<a href=\"mailto:summer@example.com\">summer@example.com</a>")
-}
-
-func notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	// w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusNotFound)
-	fmt.Fprint(w, "<h1>请求页面未找到 :(</h1><p>如有疑惑，请联系我们。</p>")
-}
-
 // Article 对应一条文章数据
 type Article struct {
 	Title, Body string
@@ -284,36 +214,6 @@ func articlesUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func articlesIndexHandler(w http.ResponseWriter, r *http.Request) {
-	// 1. 执行查询语句，返回一个结果集
-	rows, err := db.Query("SELECT * from articles")
-	logger.LogError(err)
-	defer rows.Close()
-
-	var articles []Article
-	// 2. 循环读取结果
-	for rows.Next() {
-		var article Article
-		// 2.1 扫描每一行的结果并赋值到一个 article 对象中
-		err := rows.Scan(&article.ID, &article.Title, &article.Body)
-		logger.LogError(err)
-		// 2.2 将 article 追加到 articles 的这个数组中
-		articles = append(articles, article)
-	}
-
-	// 2.3 检测遍历时是否发生错误
-	err = rows.Err()
-	logger.LogError(err)
-
-	// 3. 加载模板
-	tmpl, err := template.ParseFiles("resources/views/articles/index.gohtml")
-	logger.LogError(err)
-
-	// 4. 渲染模板，将所有文章的数据传输进去
-	err = tmpl.Execute(w, articles)
-	logger.LogError(err)
-}
-
 // ArticlesFormData 创建博文表单数据
 type ArticlesFormData struct {
 	Title, Body string
@@ -340,48 +240,6 @@ func validateArticleFormData(title string, body string) map[string]string {
 	return errors
 }
 
-func articlesStoreHandler(w http.ResponseWriter, r *http.Request) {
-
-	title := r.PostFormValue("title")
-	body := r.PostFormValue("body")
-
-	errors := validateArticleFormData(title, body)
-
-	// 检查是否有错误
-	if len(errors) == 0 {
-		lastInsertID, err := saveArticleToDB(title, body)
-		if lastInsertID > 0 {
-			fmt.Fprint(w, "插入成功，ID 为"+strconv.FormatInt(lastInsertID, 10))
-		} else {
-			logger.LogError(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			fmt.Fprint(w, "500 服务器内部错误")
-		}
-	} else {
-		// fmt.Fprintf(w, "有错误发生，errors 的值为：%v <br>", errors)
-
-		storeURL, _ := router.Get("articles.store").URL()
-
-		data := ArticlesFormData{
-			Title:  title,
-			Body:   body,
-			URL:    storeURL,
-			Errors: errors,
-		}
-
-		tmpl, err := template.ParseFiles("resources/views/articles/create.gohtml")
-		if err != nil {
-			panic(err)
-		}
-
-		err = tmpl.Execute(w, data)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-}
-
 func forceHTMLMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// 1、设置标头
@@ -402,25 +260,6 @@ func removeTrailingSlash(next http.Handler) http.Handler {
 		// 2、将请求传递下去
 		next.ServeHTTP(w, r)
 	})
-}
-
-func articlesCreateHandler(w http.ResponseWriter, r *http.Request) {
-	storeURL, _ := router.Get("articles.store").URL()
-	data := ArticlesFormData{
-		Title:  "",
-		Body:   "",
-		URL:    storeURL,
-		Errors: nil,
-	}
-	tmpl, err := template.ParseFiles("resources/views/articles/create.gohtml")
-	if err != nil {
-		panic(err)
-	}
-
-	err = tmpl.Execute(w, data)
-	if err != nil {
-		panic(err)
-	}
 }
 
 func articlesDeleteHandler(w http.ResponseWriter, r *http.Request) {
@@ -482,9 +321,6 @@ func main() {
 	// router := http.NewServeMux()
 	router = bootstrap.SetupRoute()
 
-	router.HandleFunc("/articles", articlesStoreHandler).Methods("POST").Name("articles.store")
-
-	router.HandleFunc("/articles/create", articlesCreateHandler).Methods("GET").Name("articles.create")
 	router.HandleFunc("/articles/{id:[0-9]+}/edit", articlesEditHandler).Methods("GET").Name("articles.edit")
 	router.HandleFunc("/articles/{id:[0-9]+}", articlesUpdateHandler).Methods("POST").Name("articles.update")
 	router.HandleFunc("/articles/{id:[0-9]+}/delete", articlesDeleteHandler).Methods("POST").Name("articles.delete")
