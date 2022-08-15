@@ -486,6 +486,8 @@ func main() {
 	database.Initialize()
 	db = database.DB
 
+	// 初始化数据库
+	bootstrap.SetupDB()
 	// 自定义路由  官方
 	// router := http.NewServeMux()
 	router = bootstrap.SetupRoute()
