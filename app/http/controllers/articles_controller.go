@@ -46,7 +46,9 @@ func (*ArticlesController) Index(w http.ResponseWriter, r *http.Request) {
 		// err = tmpl.Execute(w, articles)
 		// logger.LogError(err)
 
-		view.Render(w, articles, "articles.index")
+		view.Render(w, view.D{
+			"Articles": articles,
+		}, "articles.index")
 	}
 }
 
@@ -133,7 +135,9 @@ func (*ArticlesController) Show(w http.ResponseWriter, r *http.Request) {
 	} else {
 		// 4. 读取成功，显示文章
 
-		view.Render(w, article, "articles.show")
+		view.Render(w, view.D{
+			"Article": article,
+		}, "articles.show")
 	}
 }
 
