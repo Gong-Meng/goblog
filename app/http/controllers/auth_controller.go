@@ -7,6 +7,8 @@ import (
 	"goblog/pkg/auth"
 	"goblog/pkg/view"
 	"net/http"
+
+	"github.com/thedevsaddam/govalidator"
 )
 
 // AuthController 处理静态页面
@@ -87,4 +89,48 @@ func (*AuthController) DoLogin(w http.ResponseWriter, r *http.Request) {
 func (*AuthController) Logout(w http.ResponseWriter, r *http.Request) {
 	auth.Logout()
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+// sendmail
+func (*AuthController) SendMail(w http.ResponseWriter, r *http.Request) {
+	// sendmail
+	view.RenderSimple(w, view.D{
+		"Email": "",
+	}, "auth.send_mail")
+}
+
+// dosendmail
+func (*AuthController) DoSendMail(w http.ResponseWriter, r *http.Request) {
+
+	email := r.PostFormValue("email")
+
+	rules := govalidator.MapData{
+		"email": []string{"required", "min:4", "max:20", "email"},
+	}
+
+	messages := govalidator.MapData{
+		"email": []string{"required:必须填写", "min:最少4个字符", "max:最多20个字符", "email:必须是邮箱"},
+	}
+
+	opts := govalidator.Options{
+		Request:         r,        // request object
+		Rules:           rules,    // rules map
+		Messages:        messages, // custom message map (Optional)
+		RequiredDefault: true,     // all the field to be pass the rules
+	}
+
+	v := govalidator.New(opts)
+	e := v.Validate()
+	err := map[string]interface{}{"validationError": e}
+
+	if len(err) > 0 {
+		// 存在错误的情况
+		view.RenderSimple(w, view.D{
+			"Email":  email,
+			"Errors": err["validationError"],
+		}, "auth.send_mail")
+	} else {
+		// 发送邮件
+
+	}
 }
