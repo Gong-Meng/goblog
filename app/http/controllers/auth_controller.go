@@ -5,6 +5,7 @@ import (
 	"goblog/app/models/user"
 	"goblog/app/requests"
 	"goblog/pkg/auth"
+	"goblog/pkg/mail"
 	"goblog/pkg/view"
 	"net/http"
 
@@ -120,17 +121,33 @@ func (*AuthController) DoSendMail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	v := govalidator.New(opts)
-	e := v.Validate()
-	err := map[string]interface{}{"validationError": e}
+	err := v.Validate()
 
 	if len(err) > 0 {
+
 		// 存在错误的情况
 		view.RenderSimple(w, view.D{
 			"Email":  email,
-			"Errors": err["validationError"],
+			"Errors": err,
 		}, "auth.send_mail")
 	} else {
-		// 发送邮件
 
+		// 发送邮件
+		subject := "用户注册邮箱验证"
+		body := `<a herf="#">点击认证</a>`
+		result := mail.SendMail(email, subject, body)
+
+		if result {
+			fmt.Fprintf(w, "发送成功，请前往邮箱验证")
+		} else {
+
+			ers := make(map[string][]string)
+			ers["email"] = []string{"发送失败"}
+			// 发送失败
+			view.RenderSimple(w, view.D{
+				"Email":  email,
+				"Errors": ers,
+			}, "auth.send_mail")
+		}
 	}
 }

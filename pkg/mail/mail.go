@@ -6,12 +6,12 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-func SendMail() bool {
+func SendMail(to string, subject string, body string) bool {
 	m := gomail.NewMessage()
 	m.SetHeader("From", "local@localhost")
-	m.SetHeader("To", "mengmeng@123.com")
-	m.SetHeader("Subject", "Hello!")
-	m.SetBody("text/html", "Hello <b>Bob</b> and <i>Cora</i>!")
+	m.SetHeader("To", to)
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", body)
 
 	d := gomail.NewDialer("172.17.0.4", 1025, "", "")
 
