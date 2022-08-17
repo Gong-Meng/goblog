@@ -2,6 +2,7 @@ package routes
 
 import (
 	"goblog/app/http/controllers"
+	"goblog/app/http/middlewares"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -39,4 +40,9 @@ func RegisterWebRoutes(r *mux.Router) {
 
 	// 中间件：强制内容类型为 HTML
 	// r.Use(middlewares.ForceHTML)
+
+	// ---- 全局中间件 ---
+
+	// 开始会话
+	r.Use(middlewares.StartSession)
 }
