@@ -6,6 +6,7 @@ import (
 	"goblog/app/requests"
 	"goblog/pkg/auth"
 	"goblog/pkg/mail"
+	"goblog/pkg/route"
 	"goblog/pkg/view"
 	"net/http"
 
@@ -18,8 +19,11 @@ type AuthController struct {
 
 // Register 注册页面
 func (*AuthController) Register(w http.ResponseWriter, r *http.Request) {
+	email := r.URL.Query().Get("email")
 	view.RenderSimple(w, view.D{
-		"User": user.User{},
+		"User": user.User{
+			Email: email,
+		},
 	}, "auth.register")
 }
 
@@ -132,9 +136,12 @@ func (*AuthController) DoSendMail(w http.ResponseWriter, r *http.Request) {
 		}, "auth.send_mail")
 	} else {
 
+		url := route.Name2URL("auth.verifymail")
+		url = "http://localhost:3000" + url + "?email=" + email
+
 		// 发送邮件
 		subject := "用户注册邮箱验证"
-		body := `<a herf="#">点击认证</a>`
+		body := "<a href=" + url + ">点击认证</a>"
 		result := mail.SendMail(email, subject, body)
 
 		if result {
@@ -150,4 +157,12 @@ func (*AuthController) DoSendMail(w http.ResponseWriter, r *http.Request) {
 			}, "auth.send_mail")
 		}
 	}
+}
+
+func (*AuthController) VerfiyMail(w http.ResponseWriter, r *http.Request) {
+	// 验证成功，跳转到注册页面并附带对应的Email
+	email := r.URL.Query().Get("email")
+	url := route.Name2URL("auth.register")
+	url = url + "?email=" + email
+	http.Redirect(w, r, url, http.StatusFound)
 }
