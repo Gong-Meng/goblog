@@ -3,9 +3,15 @@ package main // 入口包
 import (
 	"goblog/app/http/middlewares"
 	"goblog/bootstrap"
-	"goblog/pkg/logger"
+	"goblog/config"
+	c "goblog/pkg/config"
 	"net/http"
 )
+
+func init() {
+	// 初始化配置信息
+	config.Initialize()
+}
 
 // 入口函数
 func main() {
@@ -14,6 +20,5 @@ func main() {
 	// 自定义路由  官方
 	router := bootstrap.SetupRoute()
 
-	err := http.ListenAndServe(":3000", middlewares.RemoveTrailingSlash(router))
-	logger.LogError(err)
+	http.ListenAndServe(":"+c.GetString("app.port"), middlewares.RemoveTrailingSlash(router))
 }
