@@ -6,6 +6,15 @@ import (
 	"goblog/pkg/types"
 )
 
+// GetByUserID 获取全部文章
+func GetByUserID(uid string) ([]Article, error) {
+	var articles []Article
+	if err := model.DB.Where("user_id = ?", uid).Preload("User").Find(&articles).Error; err != nil {
+		return articles, err
+	}
+	return articles, nil
+}
+
 // Get 通过 ID 获取文章
 func Get(idstr string) (Article, error) {
 	var article Article
