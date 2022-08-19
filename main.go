@@ -15,6 +15,9 @@ import (
 //go:embed resources/views/layouts/*
 var tplFS embed.FS
 
+//go:embed public/*
+var staticFS embed.FS
+
 func init() {
 	// 初始化配置信息
 	config.Initialize()
@@ -29,7 +32,7 @@ func main() {
 	bootstrap.SetupTemplate(tplFS)
 
 	// 自定义路由  官方
-	router := bootstrap.SetupRoute()
+	router := bootstrap.SetupRoute(staticFS)
 
 	http.ListenAndServe(":"+c.GetString("app.port"), middlewares.RemoveTrailingSlash(router))
 }

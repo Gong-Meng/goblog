@@ -46,8 +46,8 @@ func RegisterWebRoutes(r *mux.Router) {
 	r.HandleFunc("/auth/logout", middlewares.Auth(auc.Logout)).Methods("POST").Name("auth.logout")
 
 	// 静态资源
-	r.PathPrefix("/css/").Handler(http.FileServer(http.Dir("./public")))
-	r.PathPrefix("/js/").Handler(http.FileServer(http.Dir("./public")))
+	// r.PathPrefix("/css/").Handler(http.FileServer(http.Dir("./public")))
+	// r.PathPrefix("/js/").Handler(http.FileServer(http.Dir("./public")))
 
 	// 中间件：强制内容类型为 HTML
 	// r.Use(middlewares.ForceHTML)
