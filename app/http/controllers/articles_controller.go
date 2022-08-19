@@ -28,16 +28,15 @@ type ArticlesController struct {
 func (ac *ArticlesController) Index(w http.ResponseWriter, r *http.Request) {
 
 	// 1. 获取结果集
-	articles, err := article.GetAll()
-
-	fmt.Println("文章数据：", articles)
+	articles, pagerData, err := article.GetAll(r, 2)
 
 	if err != nil {
 		// 数据库错误
 		ac.ResponseForSQLError(w, err)
 	} else {
 		view.Render(w, view.D{
-			"Articles": articles,
+			"Articles":  articles,
+			"PagerData": pagerData,
 		}, "articles.index", "articles._article_meta")
 	}
 }
